@@ -1,5 +1,12 @@
-# cosmo-sokol
+# [cosmo-sokol github](https://github.com/bullno1/cosmo-sokol)
+# cosmo-sokol-shader
 
+## Forking Notes:
+This is a rudimentary example of using shaders with cosmo-sokol. This is using the pre-bindings-cleanup sokol and sokol-shdc, syntax will change using the most recent version of sokol 24/11/24. Sokol was not updated in this version to maintain parity with cosmo-sokol and I'm still in the process of learning how it and sokol works. This is a public fork as a courtesy to anyone wanting to try this slight hack of the excellent original repo.
+
+# !See original repo for up to date information on building and how it works
+
+##
 ![Build status](https://github.com/bullno1/cosmo-sokol/actions/workflows/build.yml/badge.svg)
 
 Sample sokol+dearimgui application compiled with [cosmopolitan toolchain](https://github.com/jart/cosmopolitan/).
