@@ -10,95 +10,91 @@
 #include "sokol_gfx.h"
 #include "sokol_log.h"
 #include "sokol_glue.h"
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include "cimgui.h"
-#define SOKOL_IMGUI_IMPL
-#include "util/sokol_imgui.h"
 #include <cosmo.h>
 #include <nvapi.h>
 #include "win32_tweaks.h"
+#include "1-simpleshader.glsl.h"
 
-typedef struct {
-    uint64_t last_time;
-    bool show_test_window;
-    bool show_another_window;
+/* application state */
+static struct {
+    sg_pipeline pip;
+    sg_bindings bind;
     sg_pass_action pass_action;
-} state_t;
-static state_t state;
+} state;
 
-void init(void) {
-    // setup sokol-gfx, sokol-time and sokol-imgui
+static void init(void) {
     sg_setup(&(sg_desc){
-        .environment = sglue_environment(),
-        .logger.func = slog_func,
+        .environment = sglue_environment()
     });
 
-    // use sokol-imgui with all default-options (we're not doing
-    // multi-sampled rendering or using non-default pixel formats)
-    simgui_setup(&(simgui_desc_t){
-        .logger.func = slog_func,
+    /* create shader from code-generated sg_shader_desc */
+    sg_shader shd = sg_make_shader(simple_shader_desc(sg_query_backend()));
+
+    /* a vertex buffer with 4 vertices */
+    float vertices[] = {
+        // positions
+        0.5f,  0.5f, 0.0f,      // top right
+        0.5f, -0.5f, 0.0f,      // bottom right
+        -0.5f, -0.5f, 0.0f,     // bottom left
+        -0.5f,  0.5f, 0.0f      // top left
+    };
+
+    state.bind.vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
+        .size = sizeof(vertices),
+        .data = SG_RANGE(vertices),
+        .label = "quad-vertices"
     });
 
-    /* initialize application state */
-    state = (state_t) {
-        .show_test_window = true,
-        .pass_action = {
-            .colors[0] = {
-                .load_action = SG_LOADACTION_CLEAR,
-                .clear_value = { 0.7f, 0.5f, 0.0f, 1.0f }
+    /* an index buffer with 2 triangles */
+    uint16_t indices[] = {
+            0, 1, 1, 3, 3, 0,    // first triangle
+            1, 2, 2, 3, 3, 1     // second triangle
+    };
+    state.bind.index_buffer = sg_make_buffer(&(sg_buffer_desc){
+        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .size = sizeof(indices),
+        .data = SG_RANGE(indices),
+        .label = "quad-indices"
+    });
+
+    /* a pipeline state object */
+    state.pip = sg_make_pipeline(&(sg_pipeline_desc){
+        .shader = shd,
+        .index_type = SG_INDEXTYPE_UINT16,
+        .primitive_type = SG_PRIMITIVETYPE_LINES,
+        .layout = {
+            .attrs = {
+                [ATTR_vs_position].format = SG_VERTEXFORMAT_FLOAT3
             }
-        }
+        },
+        .label = "quad-pipeline"
+    });
+
+    /* a pass action to clear framebuffer */
+    state.pass_action = (sg_pass_action) {
+        .colors[0] = { .load_action=SG_LOADACTION_CLEAR, .clear_value={0.2f, 0.3f, 0.3f, 1.0f} }
     };
 }
 
 void frame(void) {
-    const int width = sapp_width();
-    const int height = sapp_height();
-    simgui_new_frame(&(simgui_frame_desc_t){
-        .width = width,
-        .height = height,
-        .delta_time = sapp_frame_duration(),
-        .dpi_scale = sapp_dpi_scale()
-    });
-
-    /*// 1. Show a simple window*/
-    /*// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"*/
-    static float f = 0.0f;
-    igText("Hello, world!");
-    igSliderFloat("float", &f, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_None);
-    igColorEdit3("clear color", (float*)&state.pass_action.colors[0].clear_value, 0);
-    if (igButton("Test Window", (ImVec2) { 0.0f, 0.0f})) state.show_test_window ^= 1;
-    if (igButton("Another Window", (ImVec2) { 0.0f, 0.0f })) state.show_another_window ^= 1;
-    igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO()->Framerate, igGetIO()->Framerate);
-
-    /*// 2. Show another simple window, this time using an explicit Begin/End pair*/
-    if (state.show_another_window) {
-        igSetNextWindowSize((ImVec2){200,100}, ImGuiCond_FirstUseEver);
-        igBegin("Another Window", &state.show_another_window, 0);
-        igText("Hello");
-        igEnd();
-    }
-
-    /*// 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowDemoWindow()*/
-    if (state.show_test_window) {
-        igSetNextWindowPos((ImVec2){460,20}, ImGuiCond_FirstUseEver, (ImVec2){0,0});
-        igShowDemoWindow(0);
-    }
-
-    // the sokol_gfx draw pass
     sg_begin_pass(&(sg_pass){ .action = state.pass_action, .swapchain = sglue_swapchain() });
-    simgui_render();
+    sg_apply_pipeline(state.pip);
+    sg_apply_bindings(&state.bind);
+    sg_draw(0, 12, 1);
     sg_end_pass();
     sg_commit();
 }
 
 void cleanup(void) {
-    simgui_shutdown();
     sg_shutdown();
 }
 
-void input(const sapp_event* event) {
-    simgui_handle_event(event);
+void event(const sapp_event* e) {
+    if (e->type == SAPP_EVENTTYPE_KEY_DOWN) {
+        if (e->key_code == SAPP_KEYCODE_ESCAPE) {
+            sapp_request_quit();
+        }
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -113,11 +109,11 @@ int main(int argc, char* argv[]) {
         .init_cb = init,
         .frame_cb = frame,
         .cleanup_cb = cleanup,
-        .event_cb = input,
-        .width = 1024,
-        .height = 768,
-        .window_title = "cimgui (sokol-app)",
-        .ios_keyboard_resizes_canvas = false,
+        .event_cb = event,
+        .width = 800,
+        .height = 600,
+        .high_dpi = true,
+        .window_title = "Rendering - LearnOpenGL",
         .icon.sokol_default = true,
         .enable_clipboard = true,
         .logger.func = slog_func,

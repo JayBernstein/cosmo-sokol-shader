@@ -1,5 +1,8 @@
 #!/bin/sh -e
 
+export PATH=$PATH:/home/$USER/Coding/cosmocc-3.9.7/bin
+./scripts/sokol-tools-bin/bin/linux/sokol-shdc --input shaders/1-simpleshader.glsl --output 	shaders/1-simpleshader.glsl.h --slang glsl300es:glsl430
+
 if ! command -v cosmocc > /dev/null
 then
 	echo "You need to add cosmopolitan toolchain to your path:"
@@ -11,10 +14,12 @@ COSMO_HOME=$(dirname $(dirname $(which cosmocc)))
 
 FLAGS="-I deps/sokol \
 	-I deps/cimgui \
+	-I shaders \
 	-mcosmo \
-	-mtiny \
 	-Wall \
 	-Werror"
+#re add -mtiny when not debugging	
+
 
 LINUX_FLAGS="${FLAGS} -Ishims/linux"
 
