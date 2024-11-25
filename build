@@ -5,9 +5,13 @@ export PATH=$PATH:/home/$USER/Coding/cosmocc-3.9.7/bin
 
 if ! command -v cosmocc > /dev/null
 then
-	echo "You need to add cosmopolitan toolchain to your path:"
-	echo "export PATH=\$PATH:<path-to-cosmopolitan>/bin"
-	exit 1
+	export PATH=$PATH:/home/$USER/Coding/cosmocc-3.9.7/bin
+	if ! command -v cosmocc > /dev/null
+	then
+		echo "You need to add cosmopolitan toolchain to your path:"
+		echo "export PATH=\$PATH:<path-to-cosmopolitan>/bin"
+		exit 1
+	fi
 fi
 
 COSMO_HOME=$(dirname $(dirname $(which cosmocc)))
