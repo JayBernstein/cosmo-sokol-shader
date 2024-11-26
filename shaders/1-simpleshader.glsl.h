@@ -11,10 +11,11 @@
     =========
     Shader program: 'simple':
         Get shader desc: simple_shader_desc(sg_query_backend());
-        Vertex shader: vs
-            Attributes:
-                ATTR_vs_position => 0
-        Fragment shader: fs
+        Vertex Shader: vs
+        Fragment Shader: fs
+        Attributes:
+            ATTR_simple_position => 0
+    Bindings:
 */
 #if !defined(SOKOL_GFX_INCLUDED)
 #error "Please include sokol_gfx.h before 1-simpleshader.glsl.h"
@@ -26,7 +27,7 @@
 #define SOKOL_SHDC_ALIGN(a) __attribute__((aligned(a)))
 #endif
 #endif
-#define ATTR_vs_position (0)
+#define ATTR_simple_position (0)
 /*
     #version 430
 
@@ -127,11 +128,11 @@ static inline const sg_shader_desc* simple_shader_desc(sg_backend backend) {
         static bool valid;
         if (!valid) {
             valid = true;
-            desc.attrs[0].name = "position";
-            desc.vs.source = (const char*)vs_source_glsl430;
-            desc.vs.entry = "main";
-            desc.fs.source = (const char*)fs_source_glsl430;
-            desc.fs.entry = "main";
+            desc.vertex_func.source = (const char*)vs_source_glsl430;
+            desc.vertex_func.entry = "main";
+            desc.fragment_func.source = (const char*)fs_source_glsl430;
+            desc.fragment_func.entry = "main";
+            desc.attrs[0].glsl_name = "position";
             desc.label = "simple_shader";
         }
         return &desc;
@@ -141,11 +142,11 @@ static inline const sg_shader_desc* simple_shader_desc(sg_backend backend) {
         static bool valid;
         if (!valid) {
             valid = true;
-            desc.attrs[0].name = "position";
-            desc.vs.source = (const char*)vs_source_glsl300es;
-            desc.vs.entry = "main";
-            desc.fs.source = (const char*)fs_source_glsl300es;
-            desc.fs.entry = "main";
+            desc.vertex_func.source = (const char*)vs_source_glsl300es;
+            desc.vertex_func.entry = "main";
+            desc.fragment_func.source = (const char*)fs_source_glsl300es;
+            desc.fragment_func.entry = "main";
+            desc.attrs[0].glsl_name = "position";
             desc.label = "simple_shader";
         }
         return &desc;

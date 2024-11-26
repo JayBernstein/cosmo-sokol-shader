@@ -17,11 +17,12 @@ fi
 COSMO_HOME=$(dirname $(dirname $(which cosmocc)))
 
 FLAGS="-I deps/sokol \
-	-I deps/cimgui \
 	-I shaders \
 	-mcosmo \
 	-Wall \
 	-Werror"
+	#Goodbye "-I deps/cimgui \" 
+	#TODO Jay: Come back when you aren't broken I believe its when cimgui reaches 1.91.5
 #re add -mtiny when not debugging	
 
 
@@ -42,12 +43,12 @@ compile shims/sokol/sokol_linux.c ${LINUX_FLAGS}
 compile shims/sokol/sokol_shared.c ${FLAGS}
 compile shims/sokol/sokol_cosmo.c ${FLAGS}
 
-compile deps/cimgui/cimgui.cpp ${FLAGS}
-compile deps/cimgui/imgui/imgui.cpp ${FLAGS}
-compile deps/cimgui/imgui/imgui_demo.cpp ${FLAGS}
-compile deps/cimgui/imgui/imgui_draw.cpp ${FLAGS}
-compile deps/cimgui/imgui/imgui_tables.cpp ${FLAGS}
-compile deps/cimgui/imgui/imgui_widgets.cpp ${FLAGS}
+# compile deps/cimgui/cimgui.cpp ${FLAGS}
+# compile deps/cimgui/imgui/imgui.cpp ${FLAGS}
+# compile deps/cimgui/imgui/imgui_demo.cpp ${FLAGS}
+# compile deps/cimgui/imgui/imgui_draw.cpp ${FLAGS}
+# compile deps/cimgui/imgui/imgui_tables.cpp ${FLAGS}
+# compile deps/cimgui/imgui/imgui_widgets.cpp ${FLAGS}
 
 compile shims/linux/gl.c ${LINUX_FLAGS}
 compile shims/linux/x11.c ${LINUX_FLAGS}
