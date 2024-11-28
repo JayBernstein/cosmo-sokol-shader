@@ -1,13 +1,16 @@
 #!/bin/sh -e
 
-export PATH=$PATH:/home/$USER/Coding/cosmocc-3.9.7/bin
-./scripts/sokol-tools-bin/bin/linux/sokol-shdc --input shaders/1-simpleshader.glsl --output 	shaders/1-simpleshader.glsl.h --slang glsl300es:glsl430
+./scripts/sokol-tools-bin/bin/linux/sokol-shdc --input shaders/triangle-sapp.glsl --output 	shaders/triangle-sapp.glsl.h --slang glsl300es:glsl430
 
 if ! command -v cosmocc > /dev/null
 then
-	echo "You need to add cosmopolitan toolchain to your path:"
-	echo "export PATH=\$PATH:<path-to-cosmopolitan>/bin"
-	exit 1
+	export PATH=$PATH:$PWD/../cosmocc-3.9.7/bin #TODO Jay: the most universal solution ever
+	if ! command -v cosmocc > /dev/null 
+	then
+		echo "You need to add cosmopolitan toolchain to your path:"
+		echo "export PATH=\$PATH:<path-to-cosmopolitan>/bin"
+		exit 1
+	fi
 fi
 
 COSMO_HOME=$(dirname $(dirname $(which cosmocc)))
@@ -15,6 +18,7 @@ COSMO_HOME=$(dirname $(dirname $(which cosmocc)))
 FLAGS="-I deps/sokol \
 	-I deps/cimgui \
 	-I shaders \
+	-g \
 	-mcosmo \
 	-Wall \
 	-Werror"

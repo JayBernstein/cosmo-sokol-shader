@@ -13,7 +13,9 @@
 #include <cosmo.h>
 #include <nvapi.h>
 #include "win32_tweaks.h"
-#include "1-simpleshader.glsl.h"
+#define SOKOL_DEBUG
+#define SOKOL_VALIDATE_NON_FATAL
+#include "triangle-sapp.glsl.h"
 
 /* application state */
 static struct {
@@ -22,57 +24,41 @@ static struct {
     sg_pass_action pass_action;
 } state;
 
-static void init(void) {
-    sg_setup(&(sg_desc){
-        .environment = sglue_environment()
+static void init(void) {sg_setup(&(sg_desc){
+        .environment = sglue_environment(),
+        .logger.func = slog_func,
     });
 
-    /* create shader from code-generated sg_shader_desc */
-    sg_shader shd = sg_make_shader(simple_shader_desc(sg_query_backend()));
-
-    /* a vertex buffer with 4 vertices */
+    // a vertex buffer with 3 vertices
     float vertices[] = {
-        // positions
-        0.5f,  0.5f, 0.0f,      // top right
-        0.5f, -0.5f, 0.0f,      // bottom right
-        -0.5f, -0.5f, 0.0f,     // bottom left
-        -0.5f,  0.5f, 0.0f      // top left
+        // positions            // colors
+         0.0f,  0.5f, 0.5f,     1.0f, 0.0f, 0.0f, 1.0f,
+         0.5f, -0.5f, 0.5f,     0.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f,     0.0f, 0.0f, 1.0f, 1.0f
     };
-
     state.bind.vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
-        .size = sizeof(vertices),
         .data = SG_RANGE(vertices),
-        .label = "quad-vertices"
+        .label = "triangle-vertices"
     });
 
-    /* an index buffer with 2 triangles */
-    uint16_t indices[] = {
-            0, 1, 1, 3, 3, 0,    // first triangle
-            1, 2, 2, 3, 3, 1     // second triangle
-    };
-    state.bind.index_buffer = sg_make_buffer(&(sg_buffer_desc){
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
-        .size = sizeof(indices),
-        .data = SG_RANGE(indices),
-        .label = "quad-indices"
-    });
+    // create shader from code-generated sg_shader_desc
+    sg_shader shd = sg_make_shader(triangle_shader_desc(sg_query_backend()));
 
     /* a pipeline state object */
     state.pip = sg_make_pipeline(&(sg_pipeline_desc){
         .shader = shd,
-        .index_type = SG_INDEXTYPE_UINT16,
-        .primitive_type = SG_PRIMITIVETYPE_LINES,
         .layout = {
             .attrs = {
-                [ATTR_vs_position].format = SG_VERTEXFORMAT_FLOAT3
+                [ATTR_vs_position].format = SG_VERTEXFORMAT_FLOAT3,
+                [ATTR_vs_color0].format = SG_VERTEXFORMAT_FLOAT4
             }
         },
-        .label = "quad-pipeline"
+        .label = "triangle-pipeline"
     });
 
     /* a pass action to clear framebuffer */
     state.pass_action = (sg_pass_action) {
-        .colors[0] = { .load_action=SG_LOADACTION_CLEAR, .clear_value={0.2f, 0.3f, 0.3f, 1.0f} }
+        .colors[0] = { .load_action=SG_LOADACTION_CLEAR, .clear_value={0.0f, 0.0f, 0.0f, 1.0f } }
     };
 }
 
@@ -80,7 +66,7 @@ void frame(void) {
     sg_begin_pass(&(sg_pass){ .action = state.pass_action, .swapchain = sglue_swapchain() });
     sg_apply_pipeline(state.pip);
     sg_apply_bindings(&state.bind);
-    sg_draw(0, 12, 1);
+    sg_draw(0, 3, 1);
     sg_end_pass();
     sg_commit();
 }
