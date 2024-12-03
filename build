@@ -11,10 +11,11 @@ COSMO_HOME=$(dirname $(dirname $(which cosmocc)))
 
 FLAGS="-I deps/sokol \
 	-I deps/cimgui \
+	-g \
 	-mcosmo \
-	-mtiny \
 	-Wall \
 	-Werror"
+#re add -mtiny when not debugging	
 
 LINUX_FLAGS="${FLAGS} -Ishims/linux"
 
